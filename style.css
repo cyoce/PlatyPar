@@ -1,0 +1,25 @@
+.box {
+  border: solid 1px #ccc;
+  background-color:#eee;
+  padding: 4px;
+  margin-top: 16px;
+}
+.box.box-input {
+  border-color:#ccc;
+  width:50%;
+}
+.box:focus, .box-input:focus {
+  outline:none;
+  border-color:#0af;
+}
+.box .box-top {
+  border-bottom: solid 1px #0af;
+  width: 100%;
+}
+.box .box-bottom {
+  border: none;
+}
+
+.box .box {
+  background-color: #f8f8f8;
+}
