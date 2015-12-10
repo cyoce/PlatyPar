@@ -1,5 +1,8 @@
 "use strict";
-window.location.reload(true);
+if(isNaN(location.href[location.href.length-1])){
+  location.href += ((~location.href.indexOf('?')) ? '&' : '?') + 'latest=' + String(Math.random()).split('.')[1];
+}
+
 Array.prototype.remove = function (){
   for (var i = 0; i < arguments.length; i++){
     let index = this.indexOf(arguments[i]);
