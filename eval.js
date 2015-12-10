@@ -195,11 +195,10 @@ function runScript (script, debug){
 }
 
 function eval_stack (raw){
-  var out = `
-function stdargs(){
+  var out = `function stdargs (){
   return eval (\`[\${stdin()}]\`);
 }
-function stdin () {
+function stdin (){
   return prompt ('Input');
 }
 function stdout (string){
@@ -215,61 +214,63 @@ function main (_stack){
     stacks[stacks.length-2].push(newstack);
     stack = newstack;
   }
-function range(a,b){
-  var out = [];
-  while (b <= a) out.push(b++);
-  return out;
-}\n`;
+  function range(a,b){
+    var out = [];
+    while (b <= a) out.push(b++);
+    return out;
+  }\n`;
   var indent_level = 1, indents = [], tokens = parse_tokens(raw);
   window.tokens = tokens;
   window.raw = raw;
   const ops = {
-    "+" : "x + y",
-    "-" : "x - y",
-    "/" : "x / y",
-    "*" : "x * y",
-    "^" : "Math.pow(x,y)",
+    "+" : "$ + $",
+    "-" : "$ - $",
+    "/" : "$ / $",
+    "*" : "$ * $",
+    "^" : "Math.pow($,$)",
     "$" : "stacks[0]",
     "S" : "stacks[stacks.length-2]",
-    "@" : "usestack(x)",
-    "M" : "main (x)",
+    "s" : "stacks[stacks.length-1]",
+    "@" : "usestack ($)",
+    "M" : "main ($)",
     "(" : "x - 1",
-    ")" : "x + 1",
-    "C" : "X",
+    ")" : "$ + 1",
+    "C" : "#",
     "c" : "stacks[stacks.length-2].pop()",
     "V" : "stack[stack.length-2], stack[stack.length-1]",
-    ">" : "x >= y",
-    "<" : "x < y",
-    "|" : "x | y",
-    "&" : "x & y",
-    "~" : "x ^ y",
-    "X" : "(x,y)",
-    "x" : "x,y",
-    "=" : "x === y",
-    "_" : "range(x,y)",
-    "." : "range(x,y-1)"
+    ">" : "$ >= $",
+    "<" : "$ < $",
+    "|" : "$ | $",
+    "&" : "$ & $",
+    "~" : "$ ^ $",
+    "X" : "($,$)",
+    "x" : "$,$",
+    "=" : "$ === $",
+    "_" : "range($, $)",
+    "." : "range($, $-1)",
+    "f" : "stack.push.apply(stack, x)",
   };
   const cmd = {
     ";" : "}",
     "F" : "while (stack.length > 1){",
-    "?" : "if(x){",
+    "?" : "if($){",
     "\\" : "} else {",
-    "w" : "while(x){",
-    "W" : "while(X){",
+    "w" : "while($){",
+    "W" : "while(#){",
     "{" : 'usestack([])',
     "}" : "stacks.pop(); stack = stacks[stacks.length-1]",
-    "#" : "for (var i=0, j=x; i < j;i++){",
+    "#" : "for (var i=0, j=$; i < j;i++){",
     "," : "stacks[stacks.length-1]=stack=stack.reverse()",
+    "r" : "stack.push.apply(stack, range($,$))",
+    "[" : "stack.push(stack.shift())",
+    "]" : "stack.unshift(stack.pop())"
   };
   const stdio = {
     "a" : "stdout(x)",
     "A" : "stdout(X)",
-    "P" : "stdin()",
+    "i" : "stdin()",
     "I" : "stdargs()"
   };
-  function escape (string){
-    return string.replace(/&lt;/g,'<').replace(/&gt;/g,'>');
-  }
   function write (string){
     if (string[0]   === '}'){
       outdent ();
@@ -296,9 +297,26 @@ function range(a,b){
     indents [indent_level] = '}';
   }
   function exp (string){
-    return string.replace(/x/, 'stack.pop()')
-      .replace(/y/,'stack.pop()')
-      .replace(/X/g, 'stack[stack.length-1]');
+    return string.replace(/\$/g, 'stack.pop()')
+      .replace(/#/g, 'stack[stack.length-1]');
+  }
+  function beautify (code) {
+    code = code.split(/[\n]/g);
+    var level = 0;
+    for (var i = 0; i < code.length; i++){
+      let token = code[i].replace(/\s/g, '');
+      if (token.last === '{') level++;
+      else if (token.last === '}') level--;
+      else if (token.last === ';');
+      else {
+        code[i] += ';';
+      }
+      if (token.length > 0 && token[0] === '}') level--;
+      console.log(level);
+      code[i] += '\n';
+      if (level > 0) code[i] += '  '.repeat(level);
+    }
+    return code.join('');
   }
   for (var i = 0; i < tokens.length; i++){
     let token = tokens[i];
@@ -311,8 +329,8 @@ function range(a,b){
     else push(token);
   }
   while (indent_level > 1) outdent ();
-  write('  return stack.pop();\n}\ndocument.getElementById("run").focus()');
-  return out;
+  write('return stack.pop();\n}\ndocument.getElementById("run").focus()');
+  return beautify(out);
 }
 function compile_program (){
   const raw = mainbox.value;
