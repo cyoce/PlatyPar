@@ -171,9 +171,6 @@ function parse_tokens (string){
   return out;
 }
 
-function evalu (string){
-
-}
 
 function compare (number){
   const numstring = genNum(number);
@@ -185,7 +182,7 @@ function runScript (script, debug){
   window.open().document.write(`
     <head>
     <link rel='stylesheet' href='style.css'>
-    <title>ParStack</title>
+    <title>SubPar</title>
     </head>
     <body>
     <button style='font-family:andale-mono, consolas, menlo, monospace' class='box' id='run' onclick='run_main()'>Run</button><br>
@@ -211,7 +208,6 @@ function main (_stack){
   var stack = window.__stack = _stack, newstack, stacks=[_stack];
   function usestack(newstack){
     stacks.push(newstack);
-    stacks[stacks.length-2].push(newstack);
     stack = newstack;
   }
   function range(a,b){
@@ -248,7 +244,6 @@ function main (_stack){
     "=" : "$ === $",
     "_" : "range($, $)",
     "." : "range($, $-1)",
-    "f" : "stack.push.apply(stack, x)",
   };
   const cmd = {
     ";" : "}",
@@ -258,12 +253,13 @@ function main (_stack){
     "w" : "while($){",
     "W" : "while(#){",
     "{" : 'usestack([])',
-    "}" : "stacks.pop(); stack = stacks[stacks.length-1]",
+    "}" : "stacks[stacks.length-2].push(stack); stacks.pop(); stack = stacks[stacks.length-1]",
     "#" : "for (var i=0, j=$; i < j;i++){",
     "," : "stacks[stacks.length-1]=stack=stack.reverse()",
     "r" : "stack.push.apply(stack, range($,$))",
     "[" : "stack.push(stack.shift())",
-    "]" : "stack.unshift(stack.pop())"
+    "]" : "stack.unshift(stack.pop())",
+    "f" : "stack.push.apply(stack, $)",
   };
   const stdio = {
     "a" : "stdout(x)",
