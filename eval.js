@@ -1,4 +1,45 @@
 "use strict";
+const mainbox = document.getElementById('main');
+mainbox.focus();
+const linkbox = document.getElementById('linkbox');
+var query = parse_query(location.href);
+if (query) {
+  if (query.code){
+    mainbox.value = query.code;
+  }
+}
+function codelink_get (){
+  var code = mainbox.value;
+  linkbox.value = 'https://rawgit.com/cyoce/ParStack/master/page.html' + gen_query ({code:code});
+  linkbox.focus();
+}
+function codelink_open (){
+  window.open (linkbox.value);
+}
+function parse_query (href){
+  href = String(href).split("?");
+  if (href.length <= 1) return null;
+  href = href[1];
+  console.log(href);
+  var out  = Object.create(null);
+  var keys = href.split("&");
+  for (var i = 0; i < keys.length; i++){
+    let
+    pair = keys[i].split('=');
+    out[unescape(pair[0])] = unescape(pair[1]);
+  }
+  return out;
+}
+function gen_query (obj){
+  if (obj === null || obj === Object.create(null)) return '';
+  var out = '?';
+  for (var key in obj){
+    if (!obj.hasOwnProperty(key)) continue;
+    if (out.length !== 1) out += "&";
+    out += escape(key) + "=" + escape(obj[key]);
+  }
+  return out;
+}
 if(isNaN(location.href[location.href.length-1])){
   location.href += ((~location.href.indexOf('?')) ? '&' : '?') + 'latest=' + String(Math.random()).split('.')[1];
 }
@@ -270,5 +311,3 @@ function edit_program (){
   const newprogram = prompt(mainbox.innerText);
   if (newprogram) mainbox.innerText = newprogram;
 }
-const mainbox = document.getElementById('main');
-mainbox.focus();
