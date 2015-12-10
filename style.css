@@ -1,9 +1,12 @@
+* {
+  font-family: consolas, menlo, monospace;
+}
 .box {
   border: solid 1px #ccc;
   background-color:#eee;
   padding: 4px;
   margin-top: 16px;
-  font-family: andale-mono,consolas, menlo, monospace;
+  font-family: consolas, menlo, monospace;
 }
 .box.box-input {
   border-color:#ccc;
