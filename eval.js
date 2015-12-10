@@ -209,12 +209,17 @@ function run_main (){
   stdout (main (stdargs())) && window.close();
 }
 function main (_stack){
-  var stack = _stack, newstack, stacks=[_stack];
+  var stack = window.__stack = _stack, newstack, stacks=[_stack];
   function usestack(newstack){
     stacks.push(newstack);
     stacks[stacks.length-2].push(newstack);
     stack = newstack;
-  }\n`;
+  }
+function range(a,b){
+  var out = [];
+  while (b <= a) out.push(b++);
+  return out;
+}\n`;
   var indent_level = 1, indents = [], tokens = parse_tokens(raw);
   window.tokens = tokens;
   window.raw = raw;
@@ -225,29 +230,36 @@ function main (_stack){
     "*" : "x * y",
     "^" : "Math.pow(x,y)",
     "$" : "stacks[0]",
-    ":" : "stacks[stacks.length-2]",
+    "S" : "stacks[stacks.length-2]",
     "@" : "usestack(x)",
     "M" : "main (x)",
     "(" : "x - 1",
     ")" : "x + 1",
     "C" : "X",
     "c" : "stacks[stacks.length-2].pop()",
+    "V" : "stack[stack.length-2], stack[stack.length-1]",
     ">" : "x >= y",
     "<" : "x < y",
     "|" : "x | y",
     "&" : "x & y",
     "~" : "x ^ y",
-    "X" : "(x,x)",
+    "X" : "(x,y)",
+    "x" : "x,y",
+    "=" : "x === y",
+    "_" : "range(x,y)",
+    "." : "range(x,y-1)"
   };
   const cmd = {
     ";" : "}",
     "F" : "while (stack.length > 1){",
     "?" : "if(x){",
     "\\" : "} else {",
-    "#" : "while(x){",
+    "w" : "while(x){",
     "W" : "while(X){",
     "{" : 'usestack([])',
-    "}" : "stacks.pop(); stack = stacks[stacks.length-1]"
+    "}" : "stacks.pop(); stack = stacks[stacks.length-1]",
+    "#" : "for (var i=0, j=x; i < j;i++){",
+    "," : "stacks[stacks.length-1]=stack=stack.reverse()",
   };
   const stdio = {
     "a" : "stdout(x)",
@@ -275,7 +287,7 @@ function main (_stack){
   }
   function block (string){
     write(`var stdval = ${string};
-    if (stdval) stack.push(stdval[0])
+    if (stdval);
     else return "Bye!"`);
   }
   function outdent () {
