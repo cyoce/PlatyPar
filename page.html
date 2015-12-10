@@ -8,7 +8,7 @@
 </head>
 <body>
   <br>
-  <button class='box' id=run onclick='compile_program()' focus>Run</button>
-  <pre class='box box-input' id=main contenteditable placeholder='program here'>1?2\3;</pre>
+  <button class='box' id=compile onclick='compile_program()' focus>Compile</button> <button class='box' id=edit onclick='edit_program()'>Edit</button>
+  <input class='box box-input' id=main value='?2\3' placeholder='program here' onchange='compile_program()'/>
 </body>
 </html>

@@ -6,15 +6,6 @@ Array.prototype.remove = function (){
   }
   return this;
 }
-var raw_digits = " \"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-.split('');
-//raw_digits = "0123456789".split('');
-//raw_digits = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?`¡™£¢∞§¶•ªº–≠œ∑´®†¥¨ˆøπ“‘«åß∂ƒ©˙∆˚¬…æΩ≈ç√∫˜µ≤≥÷`⁄€‹›ﬁﬂ‡°·‚—±Œ„´‰ˇÁ¨ˆØ∏”’»ÅÍÎÏ˝ÓÔÒÚÆ¸˛Ç◊ı˜Â¯˘¿";
-const NEG = '-';
-const DEC = '.';
-const END = ' ';
-const HASH = '#';
-raw_digits.remove(NEG, DEC, END, HASH);
 const last_obj = {
   get () {
     return this[this.length-1];
@@ -24,6 +15,15 @@ const last_obj = {
 }
 Object.defineProperty(Array.prototype, 'last', last_obj);
 Object.defineProperty(String.prototype, 'last', last_obj);
+var raw_digits = " \"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+.split('');
+//raw_digits = "0123456789".split('');
+//raw_digits = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?`¡™£¢∞§¶•ªº–≠œ∑´®†¥¨ˆøπ“‘«åß∂ƒ©˙∆˚¬…æΩ≈ç√∫˜µ≤≥÷`⁄€‹›ﬁﬂ‡°·‚—±Œ„´‰ˇÁ¨ˆØ∏”’»ÅÍÎÏ˝ÓÔÒÚÆ¸˛Ç◊ı˜Â¯˘¿";
+const NEG = '-';
+const DEC = '.';
+const END = ' ';
+const HASH = '#';
+raw_digits.remove(NEG, DEC, END, HASH);
 const mod = ((x,y) => ((x % y) + y) % y);
 function parseNum (string, base, digits){
   var n = 0, sign = 1;
@@ -102,7 +102,7 @@ var funcs = {
   '?' : new Oper (3, 'x ? y : z'),
 };
 function parse_tokens (string){
-  var out = [], quote = '', quotes = ["'", '"', '`', '#'], i,j;
+  var out = [], quote = '', quotes = ["'", '"', '`'], i,j;
   if (string.last !== '\n') string += '\n';
   for (j = string[i = 0]; i < string.length; j = string[++i]){
     var escaped = string[i - 1] === '\\';
@@ -110,7 +110,6 @@ function parse_tokens (string){
       quote = j;
       out.push('');
     } else if (j === quote && !escaped){
-      //quote = '';
     } else if (j === '\n' && quote && !escaped){
       out.last += quote;
       quote = '';
@@ -138,30 +137,39 @@ function compare (number){
 }
 
 function runScript (script, debug){
-  window.open().document.write(`<pre>${script}</pre><script>${script}</script>`);
+  window.open().document.write(`
+    <head>
+    <link rel='stylesheet' href='style.css'>
+    <title>ParStack</title>
+    </head>
+    <body>
+    <button style='font-family:andale-mono, consolas, menlo, monospace' class='box' id='run' onclick='run_main()'>Run</button><br>
+    <pre>${script}</pre><script>${script}</script>
+    </body>`
+  );
 }
 
 function eval_stack (raw){
   var out = `
-  function stdargs(){
-    var input, args = [];
-    while (input = stdin()){
-      args.push(eval(input));
-      console.log(input);
-    }
-    return args;
-  }
-  function stdin () {
-    return prompt ('Input');
-  }
-  function stdout (string){
-    alert (JSON.stringify(string));
-    return string;
-  }
-  function main (stack){`;
+function stdargs(){
+  return eval (\`[\${stdin()}]\`);
+}
+function stdin () {
+  return prompt ('Input');
+}
+function stdout (string){
+  confirm(JSON.stringify(string)) || window.close();
+  return string;
+}
+function run_main (){
+  stdout (main (stdargs()));
+}
+function main (stack){\n`;
+  var indent_level = 1;
   var tokens = parse_tokens(raw);
   window.tokens = tokens;
-  var ops = {
+  window.raw = raw;
+  const ops = {
     "+" : "x + y",
     "-" : "x - y",
     "/" : "x / y",
@@ -169,18 +177,32 @@ function eval_stack (raw){
     "^" : "Math.pow(x,y)",
     "P" : "stdin()",
     "I" : "stdargs()",
-    "$" : "stack",
-    "M" : "main (x)"
+    "$" : "Object.create(stack)",
+    "M" : "main (x)",
+    "(" : "x - 1",
+    ")" : "x + 1",
+    "~" : "stack[stack.length-2]",
+    ">" : "x >= y",
+    "<" : "x < y",
+    "|" : "x | y"
   };
-  var cmd = {
+  const cmd = {
     "A" : "stdout(x)",
     ";" : "}",
     "@" : "while (stack.length > 1){",
     "?" : "if(x){",
-    "\\" : "} else {"
+    "\\" : "} else {",
+    "#" : "while(x){"
   };
+  const stdio = {};
+  function escape (string){
+    return string.replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  }
   function write (string){
-    out += string + '\n';
+    if (string[0]   === '}') indent_level--;
+    out += `${'  '.repeat(indent_level) + string}\n`;
+    if (string.last === '}') indent_level--;
+    if (string.last === '{') indent_level++;
   }
   function push(string){
     write(`stack.push(${string});`);
@@ -192,16 +214,21 @@ function eval_stack (raw){
     let token = tokens[i];
     if (token in ops) push(exp(ops[token]));
     else if (token in cmd) write(exp(cmd[token]));
+    else if (token in stdio) block(exp(stdio[token]));
     else push(token);
   }
-  write('return stack.pop()\n}');
-  write('stdout (main (stdargs()))')
-  write('window.close()');
+  if (indent_level > 1) write('}'.repeat(indent_level - 1));
+  write('  return stack.pop();\n}\ndocument.getElementById("run").focus()');
   return out;
 }
 function compile_program (){
-  var compiled = eval_stack(mainbox.innerHTML);
+  const raw = mainbox.value;
+  const compiled = eval_stack(raw);
   runScript(compiled);
 }
+function edit_program (){
+  const newprogram = prompt(mainbox.innerText);
+  if (newprogram) mainbox.innerText = newprogram;
+}
 const mainbox = document.getElementById('main');
-document.getElementById('run').focus();
+mainbox.focus();

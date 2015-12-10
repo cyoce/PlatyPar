@@ -3,6 +3,7 @@
   background-color:#eee;
   padding: 4px;
   margin-top: 16px;
+  font-family: andale-mono,consolas, menlo, monospace;
 }
 .box.box-input {
   border-color:#ccc;
