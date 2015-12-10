@@ -1,4 +1,5 @@
 "use strict";
+window.location.reload(true);
 Array.prototype.remove = function (){
   for (var i = 0; i < arguments.length; i++){
     let index = this.indexOf(arguments[i]);
