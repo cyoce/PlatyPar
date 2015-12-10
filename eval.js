@@ -158,15 +158,19 @@ function stdin () {
   return prompt ('Input');
 }
 function stdout (string){
-  confirm(JSON.stringify(string)) || window.close();
-  return string;
+  return confirm(JSON.stringify(string)) && [string];
 }
 function run_main (){
-  stdout (main (stdargs()));
+  stdout (main (stdargs())) && window.close();
 }
-function main (stack){\n`;
-  var indent_level = 1;
-  var tokens = parse_tokens(raw);
+function main (_stack){
+  var stack = _stack, newstack, stacks=[_stack];
+  function usestack(newstack){
+    stacks.push(newstack);
+    stacks[stacks.length-2].push(newstack);
+    stack = newstack;
+  }\n`;
+  var indent_level = 1, indents = [], tokens = parse_tokens(raw);
   window.tokens = tokens;
   window.raw = raw;
   const ops = {
@@ -175,49 +179,81 @@ function main (stack){\n`;
     "/" : "x / y",
     "*" : "x * y",
     "^" : "Math.pow(x,y)",
-    "P" : "stdin()",
-    "I" : "stdargs()",
-    "$" : "Object.create(stack)",
+    "$" : "stacks[0]",
+    ":" : "stacks[stacks.length-2]",
+    "@" : "usestack(x)",
     "M" : "main (x)",
     "(" : "x - 1",
     ")" : "x + 1",
-    "~" : "stack[stack.length-2]",
+    "C" : "X",
+    "c" : "stacks[stacks.length-2].pop()",
     ">" : "x >= y",
     "<" : "x < y",
-    "|" : "x | y"
+    "|" : "x | y",
+    "&" : "x & y",
+    "~" : "x ^ y",
+    "X" : "(x,x)",
   };
   const cmd = {
-    "A" : "stdout(x)",
     ";" : "}",
-    "@" : "while (stack.length > 1){",
+    "F" : "while (stack.length > 1){",
     "?" : "if(x){",
     "\\" : "} else {",
-    "#" : "while(x){"
+    "#" : "while(x){",
+    "W" : "while(X){",
+    "{" : 'usestack([])',
+    "}" : "stacks.pop(); stack = stacks[stacks.length-1]"
   };
-  const stdio = {};
+  const stdio = {
+    "a" : "stdout(x)",
+    "A" : "stdout(X)",
+    "P" : "stdin()",
+    "I" : "stdargs()"
+  };
   function escape (string){
     return string.replace(/&lt;/g,'<').replace(/&gt;/g,'>');
   }
   function write (string){
-    if (string[0]   === '}') indent_level--;
+    if (string[0]   === '}'){
+      outdent ();
+      string = string.slice(1);
+    }
     out += `${'  '.repeat(indent_level) + string}\n`;
-    if (string.last === '}') indent_level--;
+    if (string.last === '}') {
+      outdent ();
+      string = string.slice(0, string.length - 1);
+    }
     if (string.last === '{') indent_level++;
   }
-  function push(string){
+  function push (string){
     write(`stack.push(${string});`);
   }
+  function block (string){
+    write(`var stdval = ${string};
+    if (stdval) stack.push(stdval[0])
+    else return "Bye!"`);
+  }
+  function outdent () {
+    indent_level--;
+    out += indents [indent_level] || '}';
+    indents [indent_level] = '}';
+  }
   function exp (string){
-    return string.replace(/x/, 'stack.pop()').replace(/y/,'stack.pop()');
+    return string.replace(/x/, 'stack.pop()')
+      .replace(/y/,'stack.pop()')
+      .replace(/X/g, 'stack[stack.length-1]');
   }
   for (var i = 0; i < tokens.length; i++){
     let token = tokens[i];
     if (token in ops) push(exp(ops[token]));
-    else if (token in cmd) write(exp(cmd[token]));
+    else if (token in cmd) {
+      switch(token){}
+      write(exp(cmd[token]));
+    }
     else if (token in stdio) block(exp(stdio[token]));
     else push(token);
   }
-  if (indent_level > 1) write('}'.repeat(indent_level - 1));
+  while (indent_level > 1) outdent ();
   write('  return stack.pop();\n}\ndocument.getElementById("run").focus()');
   return out;
 }
