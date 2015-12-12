@@ -251,6 +251,11 @@ function main (_stack){
     "=" : "$ === $",
     "_" : "range($, $)",
     "." : "range($, $-1)",
+    "d" : "",
+    "!" : "!$",
+    "l" : "$.length",
+    "L" : "$.toLowerCase()",
+    "U" : "$.toUpperCase()"
   };
   const cmd = {
     ";" : "}",
@@ -267,12 +272,12 @@ function main (_stack){
     "[" : "stack.push(stack.shift())",
     "]" : "stack.unshift(stack.pop())",
     "f" : "stack.push.apply(stack, $)",
-    "x" : "var item = $, list = $; stack.push(list.splice(list.indexOf(item),1))",
-    "e" : "var list = $; for(var i=0;i<list.length;i++)stack.push(list[i])",
+    "x" : "var item=$,list=$;list.splice(list.indexOf(item),1);stack.push(list)",
+    "e" : "var list = $; for(var i=0;i< list.length;i++)stack.push(list[i])",
   };
   const stdio = {
-    "a" : "stdout(x)",
-    "A" : "stdout(X)",
+    "a" : "stdout($)",
+    "A" : "stdout(#)",
     "i" : "stdin()",
     "I" : "stdargs()"
   };
