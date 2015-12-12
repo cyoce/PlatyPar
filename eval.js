@@ -161,7 +161,7 @@ function parse_tokens (string){
     }
     if (quote){
       out.last += j;
-      if (quote === "'" && quote !== j) quote = '';
+      if (quote === "'" && quote !== j) out.last += quote, quote = '';
       if (out.last.length > 1 && j === quote) quote = '';
     } else {
       out.push(j);
@@ -211,8 +211,15 @@ function main (_stack){
     stack = newstack;
   }
   function range(a,b){
-    var out = [];
-    while (b <= a) out.push(b++);
+    if (~[typeof a, typeof b].indexOf('string')){
+      if (typeof a === 'string') a = a.charCodeAt();
+      if (typeof b === 'string') b = b.charCodeAt();
+      var out = range(a,b);
+      for (var i = 0; i < out.length; i++) out[i] = String.fromCharCode(out[i]);
+    } else {
+      var out = [];
+      while (b <= a) out.push(b++);
+    }
     return out;
   }\n`;
   var indent_level = 1, indents = [], tokens = parse_tokens(raw);
@@ -239,8 +246,8 @@ function main (_stack){
     "|" : "$ | $",
     "&" : "$ & $",
     "~" : "$ ^ $",
-    "X" : "($,$)",
-    "x" : "$,$",
+    "Z" : "($,$)",
+    "z" : "$,$",
     "=" : "$ === $",
     "_" : "range($, $)",
     "." : "range($, $-1)",
@@ -260,6 +267,8 @@ function main (_stack){
     "[" : "stack.push(stack.shift())",
     "]" : "stack.unshift(stack.pop())",
     "f" : "stack.push.apply(stack, $)",
+    "x" : "var item = $, list = $; stack.push(list.splice(list.indexOf(item),1))",
+    "e" : "var list = $; for(var i=0;i<list.length;i++)stack.push(list[i])",
   };
   const stdio = {
     "a" : "stdout(x)",
