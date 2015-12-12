@@ -10,7 +10,7 @@ if (query) {
 }
 function codelink_get (){
   var code = mainbox.value;
-  linkbox.value = 'https://rawgit.com/cyoce/SubPar/master/page.html' + gen_query ({code:code});
+  linkbox.value = 'https://rawgit.com/cyoce/Par/master/page.html' + gen_query ({code:code});
   linkbox.focus();
 }
 function codelink_open (){
