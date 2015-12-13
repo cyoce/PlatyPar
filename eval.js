@@ -236,7 +236,7 @@ function main (_stack){
     "s" : "stacks[stacks.length-1]",
     "@" : "usestack ($)",
     "M" : "main ($)",
-    "(" : "x - 1",
+    "(" : "$ - 1",
     ")" : "$ + 1",
     "C" : "#",
     "c" : "stacks[stacks.length-2].pop()",
