@@ -60,21 +60,13 @@ const last_obj = {
 }
 Object.defineProperty(Array.prototype, 'last', last_obj);
 Object.defineProperty(String.prototype, 'last', last_obj);
-var raw_digits = " \"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-.split('');
-//raw_digits = "0123456789".split('');
-//raw_digits = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?`¡™£¢∞§¶•ªº–≠œ∑´®†¥¨ˆøπ“‘«åß∂ƒ©˙∆˚¬…æΩ≈ç√∫˜µ≤≥÷`⁄€‹›ﬁﬂ‡°·‚—±Œ„´‰ˇÁ¨ˆØ∏”’»ÅÍÎÏ˝ÓÔÒÚÆ¸˛Ç◊ı˜Â¯˘¿";
-const NEG = '-';
-const DEC = '.';
-const END = ' ';
-const HASH = '#';
-raw_digits.remove(NEG, DEC, END, HASH);
+var raw_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwx";
 const mod = ((x,y) => ((x % y) + y) % y);
 function parseNum (string, base, digits){
   var n = 0, sign = 1;
   digits = digits || raw_digits;
   base = base || digits.length;
-  if (string[0] === NEG){
+  if (string[0] === '-'){
     string = string.slice(1);
     sign = -1;
   }
@@ -89,7 +81,7 @@ function parseNum (string, base, digits){
   return n * sign;
 }
 
-function genNum (number, digits, base){
+function genNum (number, base, digits){
   digits = digits || raw_digits;
   base = base || digits.length;
   var sign, out = '';
@@ -105,15 +97,14 @@ function genNum (number, digits, base){
   if (number % 1 !== 0){
     let str = String(number);
     let remainder = +str.slice(str.indexOf('.'));
-    console.log(remainder);
-    out += DEC;
+    out += '.';
     while (remainder > 0){
       remainder *= base;
       out += genNum (Math.floor(remainder));
       remainder %= 1;
     }
   }
-  if (sign === -1) out += NEG;
+  if (sign === -1) out += '-';
   return out;
 }
 
@@ -199,7 +190,10 @@ function stdin (){
   return prompt ('Input');
 }
 function stdout (string){
-  return confirm(JSON.stringify(string)) && [string];
+  return confirm(string) && [string];
+}
+function stdraw (string){
+  return stdout(JSON.stringify(string));
 }
 function run_main (){
   stdout (main (stdargs())) && window.close();
@@ -279,7 +273,8 @@ function main (_stack){
     "a" : "stdout($)",
     "A" : "stdout(#)",
     "i" : "stdin()",
-    "I" : "stdargs()"
+    "I" : "stdargs()",
+    "R" : "stdraw($)"
   };
   function write (string){
     if (string[0]   === '}'){
