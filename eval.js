@@ -461,7 +461,7 @@ function compile_program (){
 function rawupdate(){
   const raw = rawbox.value;
   const compiled = compile_par(raw);
-  mainbox.innerText = compiled;
+  mainbox.innerText = compiled.replace(/™/g, ' ');
 }
 function edit_program (){
   const newprogram = prompt(mainbox.innerText);
