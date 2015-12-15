@@ -158,7 +158,7 @@ function runScript (script, debug){
   window.open().document.write(`
     <head>
     <link rel='stylesheet' href='style.css'>
-    <title>Par</title>
+    <title>PlatyPar</title>
     </head>
     <body>
     <button style='font-family:andale-mono, consolas, menlo, monospace class='box' id='run' onclick='run_main()'>Run</button><br>
