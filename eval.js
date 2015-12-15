@@ -135,7 +135,7 @@ function parse_tokens (string){
         quote = '';
       }
       if (quote){
-        out.last += j;
+        out.last += j.replace(/ /g,'™');
         if (quote === "'" && quote !== j) out.last += quote, quote = '';
         if (out.last.length > 1 && j === quote) quote = '';
       } else {
@@ -207,6 +207,7 @@ function main (_stack){
     return out;
   }\n`;
   var indent_level = 1, indents = [], tokens = raw.split(/\s+/);
+  tokens = tokens.map(s => s.replace('™', ' '));
   window.tokens = tokens;
   window.raw = raw;
   const ops = {
