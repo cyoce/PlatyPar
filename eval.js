@@ -1,16 +1,33 @@
 "use strict";
+var debug = true;
+setTimeout(rawupdate);
+const raw_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const mod = ((x,y) => ((x % y) + y) % y);
 const mainbox = document.getElementById('main');
 mainbox.focus();
 const linkbox = document.getElementById('linkbox');
+const rawbox = document.getElementById('raw');
 var query = parse_query(location.href);
 if (query) {
   if (query.code){
-    mainbox.value = query.code;
+    raw.value = query.code;
   }
 }
+var time = Math.floor(new Date / 1e3);
+if (query === null) query = {};
+if (query.date === (void 0) || time - parseNum(query.date, 62) > 20){
+  query.date = genNum(time, 62);
+  location.href = applyquery (query);
+}
+console.log(+(new Date));
+function applyquery (query, href){
+  href = href || location.href;
+  href = href.split("?")[0];
+  return href + gen_query (query);
+}
 function codelink_get (){
-  var code = mainbox.value;
-  linkbox.value = 'https://rawgit.com/cyoce/Par/master/page.html' + gen_query ({code:code});
+  var code = raw.value;
+  linkbox.value = 'https://rawgit.com/cyoce/PlatyPar/master/page.html' + gen_query ({code:code});
   linkbox.focus();
 }
 function codelink_open (){
@@ -20,8 +37,7 @@ function parse_query (href){
   href = String(href).split("?");
   if (href.length <= 1) return null;
   href = href[1];
-  console.log(href);
-  var out  = Object.create(null);
+  var out  = {};
   var keys = href.split("&");
   for (var i = 0; i < keys.length; i++){
     let
@@ -40,9 +56,6 @@ function gen_query (obj){
   }
   return out;
 }
-if(isNaN(location.href[location.href.length-1])){
-  location.href += ((~location.href.indexOf('?')) ? '&' : '?') + 'latest=' + String(Math.random()).split('.')[1];
-}
 
 Array.prototype.remove = function (){
   for (var i = 0; i < arguments.length; i++){
@@ -60,8 +73,6 @@ const last_obj = {
 }
 Object.defineProperty(Array.prototype, 'last', last_obj);
 Object.defineProperty(String.prototype, 'last', last_obj);
-var raw_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwx";
-const mod = ((x,y) => ((x % y) + y) % y);
 function parseNum (string, base, digits){
   var n = 0, sign = 1;
   digits = digits || raw_digits;
@@ -81,81 +92,55 @@ function parseNum (string, base, digits){
   return n * sign;
 }
 
-function genNum (number, base, digits){
-  digits = digits || raw_digits;
-  base = base || digits.length;
-  var sign, out = '';
-  if (number < 0){
-    number *= sign = -1;
-  }
-  const magnitude = number ? Math.floor(logn(base, number)) : 0;
-  for (let i = 0; i <= magnitude; i++){
-    let index = Math.floor(number / Math.pow(base, i)) % (base);
-    out += digits[index];
-  out = out.split('').reverse().join('');
-  }
-  if (number % 1 !== 0){
-    let str = String(number);
-    let remainder = +str.slice(str.indexOf('.'));
-    out += '.';
-    while (remainder > 0){
-      remainder *= base;
-      out += genNum (Math.floor(remainder));
-      remainder %= 1;
-    }
-  }
-  if (sign === -1) out += '-';
-  return out;
+function genNum(N,radix) {
+  if (radix === (void 0)) radix = 60;
+ var HexN="", Q=Math.floor(Math.abs(N)), R;
+ while (true) {
+  R=Q%radix;
+  HexN = raw_digits.charAt(R)
+       + HexN;
+  Q=(Q-R)/radix;
+  if (Q==0) break;
+ }
+ return ((N<0) ? "-"+HexN : HexN);
 }
 
 function logn (base, number){
   return Math.log2(number) / Math.log2 (base);
 }
-
-class Oper {
-  constructor (arity, exp){
-    this.arity = arity;
-    this.exp   =  exp;
-  }
-  format (x,y){
-    return '(' + this.exp.replace('x', x).replace('y', y) + ')';
-  }
-}
-var funcs = {
-  "+" : new Oper (2, 'x + y'),
-  '-' : new Oper (2, 'x - y'),
-  '*' : new Oper (2, 'x * y'),
-  '/' : new Oper (2, 'x / y'),
-  ',' : new Oper (2, 'x[y]'),
-  ':' : new Oper (2, 'x = y'),
-  '$' : new Oper (2, 'stack.push(x)'),
-  '{' : new Oper (1, '--x'),
-  '}' : new Oper (1, '++x'),
-  '&' : new Oper (2, 'x & y'),
-  '|' : new Oper (2, 'x | y'),
-  '~' : new Oper (2, 'x ^ y'),
-  '^' : new Oper (2, 'Math.pow(x,y)'),
-  '?' : new Oper (3, 'x ? y : z'),
-};
 function parse_tokens (string){
-  var out = [], quote = '', quotes = ["'", '"', '`'], i,j;
+  var out = [], quote = '', quotes = ["'", '"', '`', "#"], i,j;
   if (string.last !== '\n') string += '\n';
   for (j = string[i = 0]; i < string.length; j = string[++i]){
     var escaped = string[i - 1] === '\\';
-    if (!quote && (~quotes.indexOf(j)) && !escaped){
-      quote = j;
-      out.push('');
-    } else if (j === quote && !escaped){
-    } else if (j === '\n' && quote && !escaped){
-      out.last += quote;
-      quote = '';
-    }
-    if (quote){
-      out.last += j;
-      if (quote === "'" && quote !== j) out.last += quote, quote = '';
-      if (out.last.length > 1 && j === quote) quote = '';
+    if (quote === "#"){
+      if (~raw_digits.indexOf(j) || out.last.length === 1){
+        out.last += j;
+      } else if (j === "#"){
+        out.push('');
+        out.last += j;
+      } else if (j === ";"){
+        quote = '';
+      } else {
+        quote = '';
+        i--;
+      }
     } else {
-      out.push(j);
+      if (!quote && (~quotes.indexOf(j)) && !escaped){
+        quote = j;
+        out.push('');
+      } else if (j === quote && !escaped){
+      } else if (j === '\n' && quote && !escaped){
+        out.last += quote;
+        quote = '';
+      }
+      if (quote){
+        out.last += j;
+        if (quote === "'" && quote !== j) out.last += quote, quote = '';
+        if (out.last.length > 1 && j === quote) quote = '';
+      } else {
+        out.push(j);
+      }
     }
   }
   if (out.last === '\n') out = out.slice(0, out.length - 1);
@@ -176,15 +161,16 @@ function runScript (script, debug){
     <title>Par</title>
     </head>
     <body>
-    <button style='font-family:andale-mono, consolas, menlo, monospace' class='box' id='run' onclick='run_main()'>Run</button><br>
+    <button style='font-family:andale-mono, consolas, menlo, monospace class='box' id='run' onclick='run_main()'>Run</button><br>
     <pre>${script}</pre><script>${script}</script>
     </body>`
   );
 }
 
-function eval_stack (raw){
-  var out = `function stdargs (){
-  return eval (\`[\${stdin()}]\`);
+function compile_long (raw){
+  var out = `var $;
+function stdargs (){
+  return eval ('[' + stdin() + ']');
 }
 function stdin (){
   return prompt ('Input');
@@ -204,6 +190,10 @@ function main (_stack){
     stacks.push(newstack);
     stack = newstack;
   }
+  function shuffle(o){
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+  }
   function range(a,b){
     if (~[typeof a, typeof b].indexOf('string')){
       if (typeof a === 'string') a = a.charCodeAt();
@@ -212,69 +202,94 @@ function main (_stack){
       for (var i = 0; i < out.length; i++) out[i] = String.fromCharCode(out[i]);
     } else {
       var out = [];
-      while (b <= a) out.push(b++);
+      while (a <= b) out.push(a++);
     }
     return out;
   }\n`;
-  var indent_level = 1, indents = [], tokens = parse_tokens(raw);
+  var indent_level = 1, indents = [], tokens = raw.split(/\s+/);
   window.tokens = tokens;
   window.raw = raw;
   const ops = {
-    "+" : "$ + $",
-    "-" : "$ - $",
-    "/" : "$ / $",
-    "*" : "$ * $",
-    "^" : "Math.pow($,$)",
-    "$" : "stacks[0]",
-    "S" : "stacks[stacks.length-2]",
-    "s" : "stacks[stacks.length-1]",
-    "@" : "usestack ($)",
-    "M" : "main ($)",
-    "(" : "$ - 1",
-    ")" : "$ + 1",
-    "C" : "#",
-    "c" : "stacks[stacks.length-2].pop()",
-    "V" : "stack[stack.length-2], stack[stack.length-1]",
-    ">" : "$ >= $",
-    "<" : "$ < $",
-    "|" : "$ | $",
-    "&" : "$ & $",
-    "~" : "$ ^ $",
-    "Z" : "($,$)",
-    "z" : "$,$",
-    "=" : "$ === $",
-    "_" : "range($, $)",
-    "." : "range($-1, $)",
-    "d" : "",
-    "!" : "!$",
-    "l" : "$.length",
-    "L" : "$.toLowerCase()",
-    "U" : "$.toUpperCase()"
+    "add" : "$ + $",
+    "sub" : "$ - $",
+    "div" : "$ / $",
+    "mul" : "$ * $",
+    "exp" : "Math.pow($,$)",
+    "mod" : "mod($,$)",
+    "global" : "stacks[0]",
+    "meta" : "stacks[stacks.length-2]",
+    "this" : "stacks[stacks.length-1]",
+    "use" : "usestack ($)",
+    "main" : "main ($)",
+    "dec" : "$ - 1",
+    "inc" : "$ + 1",
+    "copy" : "#",
+    "dupe" : "stack[stack.length-2], stack[stack.length-1]",
+    "more" : "$ >= $",
+    "less" : "$ < $",
+    "or" : "$ | $",
+    "and" : "$ & $",
+    "xor" : "$ ^ $",
+    "bitleft" : "$ << $",
+    "bitright" : "$ >> $",
+    "del" : "($,$)",
+    "equal" : "$ === $",
+    "range" : "range($, $)",
+    "rangex" : "range($-1, $)",
+    "boolnot" : "!$",
+    "booland" : "$ && $",
+    "boolor" : "$ || $",
+    "length" : "$.length",
+    "lower" : "$.toLowerCase()",
+    "upper" : "$.toUpperCase()",
+    "randint" : "Math.floor(Math.random() * $)",
+    "random" : "Math.random()",
+    "cart" : "cartesian($,$)",
+    "rotate" : "rotate ($)",
+    "sum" : "$.reduce ((x,y) => x + y)",
+    "prod" : "$.reduce((x,y) => x * y)",
+    "encap" : "[$]",
+    "encap2" : "[$,$]",
+    "flatten" : "flatten($)",
+    "shallow" : "flatten_shallow($)",
+    "string" :  "String($)",
+    "string_radix" : "$.toString($)",
+    "number" : "Number($)",
+    "number_radix" : "parseFloat($, $)",
+    "prop" : "$[$]",
+    "left" : "stack.shift()",
   };
   const cmd = {
-    ";" : "}",
-    "F" : "while (stack.length > 1){",
-    "?" : "if($){",
-    "\\" : "} else {",
-    "w" : "while($){",
-    "W" : "while(#){",
+    "swap" : "var a = $, b = $; stack.push(b,a)",
+    "shuffle" : "var r = stack.map(Math.random);stack.sort((a,b)=> random[a] - random[b]);",
+    "concat" : "var ",
+    "end" : "}",
+    "fold" : "while (stack.length > 1){",
+    "if" : "if($){",
+    "else" : "} else {",
+    "while" : "while($){",
+    "dowhile" : "while(#){",
     "{" : 'usestack([])',
     "}" : "stacks[stacks.length-2].push(stack); stacks.pop(); stack = stacks[stacks.length-1]",
-    "#" : "for (var i=0, j=$; i < j;i++){",
-    "," : "stacks[stacks.length-1]=stack=stack.reverse()",
-    "r" : "stack.push.apply(stack, range($,$))",
-    "[" : "stack.push(stack.shift())",
-    "]" : "stack.unshift(stack.pop())",
-    "f" : "stack.push.apply(stack, $)",
-    "x" : "var item=$,list=$;list.splice(list.indexOf(item),1);stack.push(list)",
-    "e" : "var list = $; for(var i=0;i< list.length;i++)stack.push(list[i])",
+    "repeat" : "for (var i=0, j=$; i < j;i++){",
+    "swap" : "stacks[stacks.length-1]=stack=stack.reverse()",
+    "right" : "stack.unshift($)",
+    "remove" : "var list=$;list.splice(list.indexOf($),1);stack.push(list)",
+    "expand" : "var list = $; for(var i=0;i< list.length; i++) stack.push(list[i])",
+    "reverse" : "stack.reverse()",
+    "pop" : "$",
+    "shift" : "stack.shift()",
+    "index" : "var item = $; stack.push ($.indexOf(item))",
+    "code" : "charCode($)",
+    "interp" : "var list = $; list.push($)",
   };
   const stdio = {
-    "a" : "stdout($)",
-    "A" : "stdout(#)",
-    "i" : "stdin()",
-    "I" : "stdargs()",
-    "R" : "stdraw($)"
+    "print" : "stdout(#)",
+    "input" : "stdin()",
+    "raw_input" : "stdargs()",
+    "raw_print" : "stdraw(#)",
+    "output" : "stdout($)",
+    "raw_output" : "stdraw($)"
   };
   function write (string){
     if (string[0]   === '}'){
@@ -289,21 +304,34 @@ function main (_stack){
     if (string.last === '{') indent_level++;
   }
   function push (string){
-    write(`stack.push(${string});`);
+    write('stack.push(' + string + ');');
   }
   function block (string){
-    write(`var stdval = ${string};
-    if (stdval);
-    else return "Bye!"`);
+    write('var stdval = ' + string + ';\
+    if (stdval);\
+    else return "Bye!"');
   }
   function outdent () {
     indent_level--;
     out += indents [indent_level] || '}';
     indents [indent_level] = '}';
   }
-  function exp (string){
-    return string.replace(/\$/g, 'stack.pop()')
-      .replace(/#/g, 'stack[stack.length-1]');
+  function exp (string, state){
+    string = string.replace(/#/g, 'stack[stack.length-1]');
+    var len = string.match(/\$/g);
+    if (len) len = len.length;
+    else return string;
+    string = string.replace(/\$/g,"@");
+    if (!state){
+      string = `(($ = stack.splice(-${len}, ${len})),(` + string;
+    } else {
+      string = `$ = stack.splice(-${len}, ${len}); ${string}`
+    }
+    for (var i = 0; i < len; i++){
+      string = string.replace (/\@/, '$[' + i + ']');
+    }
+    if (!state) string += '))';
+    return string;
   }
   function beautify (code) {
     code = code.split(/[\n]/g);
@@ -327,20 +355,112 @@ function main (_stack){
     let token = tokens[i];
     if (token in ops) push(exp(ops[token]));
     else if (token in cmd) {
-      switch(token){}
-      write(exp(cmd[token]));
+      write(exp(cmd[token], true));
     }
-    else if (token in stdio) block(exp(stdio[token]));
+    else if (token in stdio) block(exp(stdio[token], true));
     else push(token);
+    if (debug) out += '\nconsole.log(JSON.stringify(stack));\n'
   }
   while (indent_level > 1) outdent ();
   write('return stack.pop();\n}\ndocument.getElementById("run").focus()');
   return beautify(out);
 }
+function compile_par (raw) {
+  var ops = {
+    "+" : "add",
+    "-" : "sub",
+    "*" : "mul",
+    "/" : "div",
+    "%" : "mod",
+    "^" : "exp",
+    "#^" : "xor",
+    "|" : "or",
+    "&" : "and",
+    "#!" : "not",
+    "#(" : "bitleft",
+    "#)" : "bitright",
+    ">" : "more",
+    "<" : "less",
+    "=" : "equal",
+    "#>" : "max",
+    "#<" : "min",
+    "#|" : "boolor",
+    "#&" : "booland",
+    "!" : "boolnot",
+    "H" : "inc",
+    "T" : "dec",
+    "#?" : "randint",
+    "#%" : "random",
+    "P" : "cart",
+    "_" : "range",
+    "R" : "rotate",
+    "p" : "prod",
+    "s" : "sum",
+    "j" : "interp",
+    "J" : "encap",
+    "y" : "flatten",
+    "Y" : "shallow",
+    "K" : "index",
+    "k" : "indexOf",
+    "u" : "charCode",
+    "l" : "length",
+    "#$" : "shuffle",
+    "d" : "pop",
+    "." : "reverse",
+    "," : "swap",
+    "(" : "left",
+    ")" : "right",
+    "c" : "copy",
+    "C" : "dupe",
+    "{" : "{",
+    "}" : "}",
+    ":" : "read",
+    "@" : "write",
+    "e" : "encap",
+    "E" : "encap2",
+    "G" : "global",
+    "q" : "input",
+    "Q" : "raw_input",
+    "o" : "raw_output",
+    "O" : "output",
+    "a" : "raw_print",
+    "A" : "print",
+    "F" : "fold",
+    "M" : "map",
+    "?" : "if",
+    "\\" : "else",
+    "W" : "while",
+    "w" : "dowhile",
+    "N" : "number",
+    "n" : "number_radix",
+    "S" : "string",
+    "#'" : "string_radix",
+    "$" : "global",
+    ";" : "end",
+    "x" : "remove",
+    "e" : "expand"
+  };
+  var out = '', tokens = parse_tokens(raw);
+  for (var i = 0; i < tokens.length; i++){
+    let token = tokens[i];
+    if (token in ops){
+      out += ops[token];
+    } else if (token[0] === '#'){
+      out += String (parseNum (token.slice(1)), 60);
+    } else {
+      out += token;
+    }
+    out += ' ';
+  }
+  return out.slice(0,-1);
+}
 function compile_program (){
-  const raw = mainbox.value;
-  const compiled = eval_stack(raw);
-  runScript(compiled);
+  runScript (compile_long(mainbox.innerText));
+}
+function rawupdate(){
+  const raw = rawbox.value;
+  const compiled = compile_par(raw);
+  mainbox.innerText = compiled;
 }
 function edit_program (){
   const newprogram = prompt(mainbox.innerText);
