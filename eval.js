@@ -76,7 +76,7 @@ Object.defineProperty(String.prototype, 'last', last_obj);
 function parseNum (string, base, digits){
   var n = 0, sign = 1;
   digits = digits || raw_digits;
-  base = base || digits.length;
+  base = base || 60;
   if (string[0] === '-'){
     string = string.slice(1);
     sign = -1;
@@ -168,7 +168,7 @@ function runScript (script, debug){
 }
 
 function compile_long (raw){
-  var out = `var $, log ='';
+  var out = `var $, log =[];
 function stdargs (){
   return eval ('[' + stdin() + ']');
 }
@@ -186,6 +186,7 @@ function run_main (){
 }
 function main (_stack){
   var stack = window.__stack = _stack, newstack, stacks=[_stack];
+  log.push(stringify(stack));
   function usestack(newstack){
     stacks.push(newstack);
     stack = newstack;
@@ -193,6 +194,15 @@ function main (_stack){
   function shuffle(o){
     for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
+  }
+  function display(list){
+    var out = [];
+    for(var i = 0; i < list.length;i++){
+      item = list[i];
+      item = item.replace(/\\n/g, '');
+      if (out[out.length-1] !== item) out.push(item)
+    }
+    return out.join('\\n');
   }
   ${stringify}
   function range(a,b){
@@ -361,10 +371,10 @@ function main (_stack){
     }
     else if (token in stdio) block(exp(stdio[token], true));
     else push(token);
-    if (debug) out += 'var line = stringify(stack)\n; if(log.split("\\n").last != line) log += line;\n'
+    if (debug) out += 'log.push(stringify(stack));\n'
   }
   while (indent_level > 1) outdent ();
-  write('console.log(log);\nreturn stack.pop();\n}\ndocument.getElementById("run").focus()');
+  write('console.log(display(log));\nreturn stack.pop();\n}\ndocument.getElementById("run").focus()');
   return beautify(out);
 }
 function compile_par (raw) {
@@ -459,15 +469,18 @@ function compile_par (raw) {
 function compile_program (){
   runScript (compile_long(mainbox.innerText));
 }
+
 function rawupdate(){
   const raw = rawbox.value;
   const compiled = compile_par(raw);
   mainbox.innerText = compiled.replace(/™/g, ' ');
 }
+
 function edit_program (){
   const newprogram = prompt(mainbox.innerText);
   if (newprogram) mainbox.innerText = newprogram;
 }
+
 function stringify (iter, used){
   used = used || [];
   var out = '';
@@ -479,7 +492,6 @@ function stringify (iter, used){
         out += `"${iter[i]}"`;
       }
     } else if (typeof iter[i] === 'object'){
-      console.log(iter[i], used);
       if (~used.indexOf(iter[i])){
         out += '<stack>';
       } else {
