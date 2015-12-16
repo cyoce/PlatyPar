@@ -168,7 +168,7 @@ function runScript (script, debug){
 }
 
 function compile_long (raw){
-  var out = `var $;
+  var out = `var $, log ='';
 function stdargs (){
   return eval ('[' + stdin() + ']');
 }
@@ -194,6 +194,7 @@ function main (_stack){
     for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
   }
+  ${stringify}
   function range(a,b){
     if (~[typeof a, typeof b].indexOf('string')){
       if (typeof a === 'string') a = a.charCodeAt();
@@ -360,10 +361,10 @@ function main (_stack){
     }
     else if (token in stdio) block(exp(stdio[token], true));
     else push(token);
-    if (debug) out += '\nconsole.log(JSON.stringify(stack));\n'
+    if (debug) out += 'var line = stringify(stack)\n; if(log.split("\\n").last != line) log += line;\n'
   }
   while (indent_level > 1) outdent ();
-  write('return stack.pop();\n}\ndocument.getElementById("run").focus()');
+  write('console.log(log);\nreturn stack.pop();\n}\ndocument.getElementById("run").focus()');
   return beautify(out);
 }
 function compile_par (raw) {
@@ -439,7 +440,7 @@ function compile_par (raw) {
     "$" : "global",
     ";" : "end",
     "x" : "remove",
-    "e" : "expand"
+    "X" : "expand"
   };
   var out = '', tokens = parse_tokens(raw);
   for (var i = 0; i < tokens.length; i++){
@@ -466,4 +467,29 @@ function rawupdate(){
 function edit_program (){
   const newprogram = prompt(mainbox.innerText);
   if (newprogram) mainbox.innerText = newprogram;
+}
+function stringify (iter, used){
+  used = used || [];
+  var out = '';
+  for (var i = 0; i < iter.length; i++){
+    if (typeof iter[i] === 'string'){
+      if (iter[i].length === 1){
+        out += "'" + iter[i];
+      } else {
+        out += `"${iter[i]}"`;
+      }
+    } else if (typeof iter[i] === 'object'){
+      console.log(iter[i], used);
+      if (~used.indexOf(iter[i])){
+        out += '<stack>';
+      } else {
+        used.push(iter[i]);
+        out += '\n[' + stringify(iter[i], used) + ']';
+      }
+    } else {
+      out += String(iter[i]);
+    }
+    out += ' ';
+  }
+  return out.slice(0,-1);
 }
