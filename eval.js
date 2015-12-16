@@ -94,13 +94,22 @@ function parseNum (string, base, digits){
 
 function genNum(N,radix) {
   if (radix === (void 0)) radix = 60;
+  var pow = 0;
+  while (N%1){
+    N *= radix;
+    pow++;
+  }
  var HexN="", Q=Math.floor(Math.abs(N)), R;
- while (true) {
+ do {
   R=Q%radix;
   HexN = raw_digits.charAt(R)
        + HexN;
   Q=(Q-R)/radix;
-  if (Q==0) break;
+} while(Q);
+ if (pow){
+   HexN = HexN.split('');
+   HexN.splice(-pow,0,'.');
+   HexN = HexN.join('');
  }
  return ((N<0) ? "-"+HexN : HexN);
 }
@@ -186,6 +195,7 @@ function run_main (){
 }
 function main (_stack){
   var stack = window.__stack = _stack, newstack, stacks=[_stack];
+  log = [];
   log.push(stringify(stack));
   function usestack(newstack){
     stacks.push(newstack);
@@ -488,6 +498,8 @@ function stringify (iter, used){
     if (typeof iter[i] === 'string'){
       if (iter[i].length === 1){
         out += "'" + iter[i];
+      } else if (iter[i].length === 0){
+        out += "''";
       } else {
         out += `"${iter[i]}"`;
       }
