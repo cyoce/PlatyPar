@@ -468,7 +468,8 @@ function compile_par (raw) {
     if (token in ops){
       out += ops[token];
     } else if (token[0] === '#'){
-      out += String (parseNum (token.slice(1)), 60);
+      var parts = token.slice(1).replace(/z/g, '.').split('y').map($ => String(parseNum ($, 60))).join('e');
+      out += parts;
     } else {
       out += token;
     }
