@@ -2,8 +2,8 @@
 
 PlatyPar is a golfing language that compiles to JavaScript, similarly to CoffeeScript. It was made for code-golfing, mainly on [SE](http://codegolf.stackexchange.com). Unlike most conventional languages, it is stack-oriented, which leads to interesting benefits and side-effects. 
 
-## Infix notation
-One important distinction is that while any practical language, uses **infix notation**, PlatyPar uses **postfix notation**.
+## Postfix notation
+One important distinction is that while any practical language uses **infix notation**, PlatyPar uses **postfix notation**.
 This means that for a given operation, let's say `+`, you would put it **in**between (as in **in**fix), i.e. `a+b`. This can be read as "a plus b".
 However, PlatyPar uses postfix notation, i.e. `ab+`. This can be read as "a, b, add", or if you prefer a pseudo-code approach, `[a,b].add`.
 There is an important tradeoff here. Consider the following infix expression:
