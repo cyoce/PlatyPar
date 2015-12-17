@@ -191,7 +191,16 @@ function stdraw (string){
   return stdout(JSON.stringify(string));
 }
 function run_main (){
-  stdout (main (stdargs())) && window.close();
+  stdout (main (stdargs ())) && window.close ();
+}
+function shuffle (array) {
+  var m = array.length, t, i;
+  while (m) {
+    i = Math.floor(Math.random() * m--);
+    t = array[m];
+    array[m] = array[i];
+    array[i] = t;
+  }
 }
 function main (_stack){
   var stack = window.__stack = _stack, newstack, stacks=[_stack];
@@ -201,10 +210,15 @@ function main (_stack){
     stacks.push(newstack);
     stack = newstack;
   }
-  function shuffle(o){
-    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-    return o;
+	function shuffle(array) {
+  var m = array.length, t, i;
+  while (m) {
+    i = Math.floor(Math.random() * m--);
+    t = array[m];
+    array[m] = array[i];
+    array[i] = t;
   }
+}
   function display(list){
     var out = [];
     for(var i = 0; i < list.length;i++){
@@ -283,8 +297,7 @@ function main (_stack){
   };
   const cmd = {
     "swap" : "var a = $, b = $; stack.push(b,a)",
-    "shuffle" : "var r = stack.map(Math.random);stack.sort((a,b)=> random[a] - random[b]);",
-    "concat" : "var ",
+    "shuffle" : "shuffle (stack)",
     "end" : "}",
     "fold" : "while (stack.length > 1){",
     "if" : "if($){",
