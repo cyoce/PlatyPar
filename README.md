@@ -36,7 +36,7 @@ This may be confusing, so I'll demonstrate what's going on behind the scenes:
 3  :: [2 3]
 +  :: [2+3] => [5]
 4  :: [5 4]
-*  :: [5*4] => [45]
+*  :: [5*4] => [20]
 ```
 
 Here's the interesting part: at the beginning of the program, PlatyPar always asks for input! All input (`,` separated) is pushed to the stack! So to find the the sum of two input numbers:
