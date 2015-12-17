@@ -20,7 +20,7 @@ PlatyPar translates each character into a command. For example, in our previous 
 ```javascript
 23+4*
 ```
-Since every character is treated separately, **including numbers**, this is parsed as:
+Since every character is treated separately, **including numbers** (more on that later), this is parsed as:
 ```javascript
 push 2
 push 3
@@ -39,6 +39,7 @@ This may be confusing, so I'll demonstrate what's going on behind the scenes:
 *  :: [5*4] => [20]
 ```
 
+## Implicit I/O
 Here's the interesting part: at the beginning of the program, PlatyPar always asks for input! All input (`,` separated) is pushed to the stack! So to find the the sum of two input numbers:
 ```javascript
 +
@@ -50,4 +51,8 @@ in :: [2 5]
 +  :: [2+5] => 7
 ```
 Which brings us to the next feature: implicit printing.
-At the end of the program, the last item of the stack is printed. This is useful, because 99% of all code golf challenges require I/O! Even the most basic `Hello, world!` program requires output. When given a challenge, you only need to worry about implementing the algorithm, *not* getting input and giving output. If it's _implicit_ you want to do something, why should you _explicitly_ tell the program to do it? (this is why I hate Java).
+At the end of the program, the last item of the stack is printed. This is useful, because 99% of all code golf challenges require I/O! Even the most basic `Hello, world!` program requires output. When given a challenge, you only need to worry about implementing the algorithm, *not* getting input and giving output. If it's _implicit_ you want to do something, why should you _explicitly_ tell the program to do it? (this is why Java sucks)
+
+## Numbers and Base 60
+As previously mentioned, all characters are parsed as separate commands. This includes numbers. So `12` is not parsed as, well, `12`, but rather as `1, 2`. This makes repeated operations on integers easier. However, most numbers require multiple digits. Introducing the `#` operator. This parses all alphanumeric characters after it as a number. Using any operator or symbol in a number literal will terminate it, and then use that symbol for its normal function. A semicolon `;` or `EOL` can be used to terminate a number literal without any side effects. 
+To make up for the extra character required with the `#`, PlatyPar's number system is base 60. Why base 60? For starters, all alphanumeric characters, or `[0-9A-Za-z]` if you speak regex, allow a maximum of base 62. But having a higher base doesn't necessarily mean shorter length. 60 was chosen because it is the largest [highly composite number](https://en.wikipedia.org/wiki/Highly_composite_number) that can be represented with the range of ASCII characters. TL;DR: a highly composite number is a number that has more factors than any number before it. This means it has a lot of divisors, so dividing by 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, or 60 **will not** result in a recurring decimal, whereas base 10 can't even handle a 3 without repeating. This makes base 60 number literals shorter. The order goes `0-9`, then `A-Z`, and finally `a-x`. A `y` in a number literal represents the `e` in scientific notation, and a `z` is a decimal point (as using an actual `.` would terminate the literal). If you're feeling lazy and don't want to figure out how to represent your number, open your console on the [main page](https://rawgit.com/cyoce/PlatyPar/master/page.html), and type `genNum (n)`. This will return the base 60 representation of `n`.
