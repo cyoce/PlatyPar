@@ -84,6 +84,7 @@ const last_obj = {
 Object.defineProperty(Array.prototype, 'last', last_obj);
 Object.defineProperty(String.prototype, 'last', last_obj);
 function parseNum (string, base, digits){
+	if (base <= 36) return parseFloat(string, base);
   var n = 0, sign = 1;
   digits = digits || raw_digits;
   base = base || 60;
@@ -102,26 +103,27 @@ function parseNum (string, base, digits){
   return n * sign;
 }
 
-function genNum(N,radix) {
+function genNum(n,radix) {
+	if (radix <= 36) return n.toString(radix);
   if (radix === (void 0)) radix = 60;
   var pow = 0;
-  while (N%1){
-    N *= radix;
+  while (n%1){
+    n *= radix;
     pow++;
   }
- var HexN="", Q=Math.floor(Math.abs(N)), R;
+ var num="", q=Math.floor(Math.abs(n)), r;
  do {
-  R=Q%radix;
-  HexN = raw_digits.charAt(R)
-       + HexN;
-  Q=(Q-R)/radix;
-} while(Q);
+  r=q%radix;
+  num = raw_digits.charAt(r)
+       + num;
+  q=(q-r)/radix;
+} while(q);
  if (pow){
-   HexN = HexN.split('');
-   HexN.splice(-pow,0,'.');
-   HexN = HexN.join('');
+   num = num.split('');
+   num.splice(-pow,0,'.');
+   num = num.join('');
  }
- return ((N<0) ? "-"+HexN : HexN);
+ return ((n<0) ? "-"+num : num);
 }
 
 function logn (base, number){
@@ -190,6 +192,29 @@ function compile_long (raw){
   var out = `var $, log =[];
 function stdargs (){
   return eval ('[' + stdin() + ']');
+}
+function type (x){
+	return Object.prototype.toString.call(x).slice(8,-1);
+}
+function mul (a,b){
+	switch ([type (a), type (b)].join (', ')){
+		case "Number, Number":
+			return a * b;
+		case "String, Number":
+		case [Array, Number]:
+			return repeat (a, b);
+		case [Array, Array]:
+			return cartesian (a , b);
+		default:
+			return a * b;
+	}
+}
+function repeat (list, n){
+	var out = [];
+	for (var i = 0; i < n; i++){
+		out = out.concat (list);
+	}
+	return out;
 }
 function stdin (){
   return prompt ('Input');
@@ -276,7 +301,7 @@ function main (_stack){
     "add" : "$ + $",
     "sub" : "$ - $",
     "div" : "$ / $",
-    "mul" : "$ * $",
+    "mul" : "mul ($,$)",
     "exp" : "Math.pow($,$)",
     "mod" : "mod($,$)",
     "global" : "stacks[0]",
@@ -323,6 +348,10 @@ function main (_stack){
     "left" : "stack.shift()",
 		"index" : "$.indexOf ($)",
 		"code" : "charCode($)",
+		"string" : "$.toString ()",
+		"string_radix" : "$.toString ($)",
+		"number" : "Number ($)",
+		"number_radix": "parseInt ($, $)"
   };
   const cmd = {
     "swap" : "var a = $, b = $; stack.push(b,a)",
@@ -405,9 +434,6 @@ function main (_stack){
       if (token.last === '{') level++;
       else if (token.last === '}') level--;
       else if (token.last === ';');
-      else {
-        code[i] += ';';
-      }
       if (token.length > 0 && token[0] === '}') level--;
       console.log(level);
       code[i] += '\n';
