@@ -283,6 +283,9 @@ function main (_stack){
 		if (typeof i === 'object') return Object.create (i);
 		return Array (...i);
 	}
+	function mod (a,b){
+		return ((a%b)+b)%b;
+	}
   function range(a,b){
     if (~[typeof a, typeof b].indexOf('string')){
       if (typeof a === 'string') a = a.charCodeAt();
