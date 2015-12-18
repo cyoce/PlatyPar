@@ -10,7 +10,7 @@ const rawbox = document.getElementById('raw');
 var query = parse_query(location.href);
 if (query) {
   if (query.code){
-    raw.value = query.code;
+    rawbox.value = query.code;
   }
 }
 var time = Math.floor(new Date / 1e3);
@@ -26,7 +26,7 @@ function applyquery (query, href){
   return href + gen_query (query);
 }
 function codelink_get (){
-  var code = raw.value;
+  var code = rawbox.value;
   linkbox.value = 'https://rawgit.com/cyoce/PlatyPar/master/page.html' + gen_query ({code:code});
   linkbox.focus();
 	return linkbox.value;
@@ -203,6 +203,18 @@ function stdraw (string){
 function run_main (){
   stdout (main (stdargs ())) && window.close ();
 }
+function charCode (x){
+	var out;
+	if (typeof x === 'number') return [String.fromCharCode (x)];
+	else if (typeof x === 'string' && x.length === 1) return [x.charCodeAt()];
+	else {
+		out = Array(x.length);
+		for (var i = 0; i < x.length; i++){
+			out[i] = charCode (x[i])[0];
+		}
+	}
+	return out;
+}
 function shuffle (array) {
   var m = array.length, t, i;
   while (m) {
@@ -310,6 +322,7 @@ function main (_stack){
     "prop" : "$[$]",
     "left" : "stack.shift()",
 		"index" : "$.indexOf ($)",
+		"code" : "charCode($)",
   };
   const cmd = {
     "swap" : "var a = $, b = $; stack.push(b,a)",
@@ -331,7 +344,6 @@ function main (_stack){
     "pop" : "$",
     "shift" : "stack.shift()",
     "index" : "var item = $; stack.push ($.indexOf(item))",
-    "code" : "charCode($)",
     "interp" : "var list = $; list.push($)",
 		"map" : "for (var i = 0, iter = iterate ($); i < iter.length; i++){\nstack.push (iter[i])"
   };
@@ -442,6 +454,7 @@ function compile_par (raw) {
     "H" : "inc",
     "T" : "dec",
     "~" : "randint",
+		"#?" : "randint",
     "#%" : "random",
     "P" : "cart",
     "_" : "range",
@@ -454,7 +467,7 @@ function compile_par (raw) {
     "Y" : "shallow",
     "K" : "prop",
     "k" : "index",
-    "u" : "charCode",
+    "u" : "code",
     "l" : "length",
     "#$" : "shuffle",
     "d" : "pop",
