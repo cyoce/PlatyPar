@@ -29,6 +29,16 @@ function codelink_get (){
   var code = raw.value;
   linkbox.value = 'https://rawgit.com/cyoce/PlatyPar/master/page.html' + gen_query ({code:code});
   linkbox.focus();
+	return linkbox.value;
+}
+function markdown_gen (){
+	mainbox.innerText = `
+# [PlatyPar](https://github.com/cyoce/PlatyPar/blob/master/), ${rawbox.value.length} bytes
+
+    ${rawbox.value}
+
+[Try it online](${codelink_get()})!
+`
 }
 function codelink_open (){
   window.open (linkbox.value);
@@ -123,7 +133,7 @@ function parse_tokens (string){
   for (j = string[i = 0]; i < string.length; j = string[++i]){
     var escaped = string[i - 1] === '\\';
     if (quote === "#"){
-      if (~raw_digits.indexOf(j) || out.last.length === 1){
+      if ((~raw_digits.indexOf(j) && ~raw_digits.concat(["#"]).indexOf(out.last.last)) || out.last.length === 1){
         out.last += j;
       } else if (j === "#"){
         out.push('');
@@ -294,6 +304,7 @@ function main (_stack){
     "number_radix" : "parseFloat($, $)",
     "prop" : "$[$]",
     "left" : "stack.shift()",
+		"index" : "$.indexOf ($)",
   };
   const cmd = {
     "swap" : "var a = $, b = $; stack.push(b,a)",
@@ -435,8 +446,8 @@ function compile_par (raw) {
     "J" : "encap",
     "y" : "flatten",
     "Y" : "shallow",
-    "K" : "index",
-    "k" : "indexOf",
+    "K" : "prop",
+    "k" : "index",
     "u" : "charCode",
     "l" : "length",
     "#$" : "shuffle",
