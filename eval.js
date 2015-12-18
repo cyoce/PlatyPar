@@ -156,8 +156,8 @@ function parse_tokens (string){
         quote = '';
       }
       if (quote){
-        out.last += j.replace(/ /g,'™');
-        if (quote === "'" && quote !== j) out.last += quote, quote = '';
+				out.last += j.replace(/ /g,'™');
+        if (quote === "'" && out.last.length > 1) out.last += quote, quote = '';
         if (out.last.length > 1 && j === quote) quote = '';
       } else {
         out.push(j);
@@ -165,6 +165,7 @@ function parse_tokens (string){
     }
   }
   if (out.last === '\n') out = out.slice(0, out.length - 1);
+	console.trace(out, ">>><<<");
   return out;
 }
 
@@ -201,9 +202,9 @@ function mul (a,b){
 		case "Number, Number":
 			return a * b;
 		case "String, Number":
-		case [Array, Number]:
+		case "Array, Number":
 			return repeat (a, b);
-		case [Array, Array]:
+		case "Array, Array":
 			return cartesian (a , b);
 		default:
 			return a * b;
@@ -214,6 +215,7 @@ function repeat (list, n){
 	for (var i = 0; i < n; i++){
 		out = out.concat (list);
 	}
+	if (typeof list === 'string') return out.join('');
 	return out;
 }
 function stdin (){
@@ -293,8 +295,10 @@ function main (_stack){
     }
     return out;
   }\n`;
+	console.log(raw);
   var indent_level = 1, indents = [], tokens = raw.split(/\s+/);
-  tokens = tokens.map(s => s.replace('™', ' '));
+	console.log(tokens);
+  tokens = tokens.map(s => s.replace(/™/g, ' '));
   window.tokens = tokens;
   window.raw = raw;
   const ops = {
@@ -435,7 +439,6 @@ function main (_stack){
       else if (token.last === '}') level--;
       else if (token.last === ';');
       if (token.length > 0 && token[0] === '}') level--;
-      console.log(level);
       code[i] += '\n';
       if (level > 0) code[i] += '  '.repeat(level);
     }
@@ -549,7 +552,7 @@ function compile_par (raw) {
   return out.slice(0,-1);
 }
 function compile_program (){
-  runScript (compile_long(mainbox.innerText));
+  runScript (compile_long(compile_par(rawbox.value)));
 }
 
 function rawupdate(){
