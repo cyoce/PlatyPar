@@ -133,7 +133,7 @@ function parse_tokens (string){
   var out = [], quote = '', quotes = ["'", '"', '`', "#"], i,j;
   if (string.last !== '\n') string += '\n';
   for (j = string[i = 0]; i < string.length; j = string[++i]){
-    var escaped = string[i - 1] === '\\';
+    var escaped = string[i - 1] === '\\' && quote;
     if (quote === "#"){
       if ((~raw_digits.indexOf(j) && ~raw_digits.concat(["#"]).indexOf(out.last.last)) || out.last.length === 1){
         out.last += j;
