@@ -239,6 +239,11 @@ function main (_stack){
     return out.join('\\n');
   }
   ${stringify}
+	function iterate (i){
+		if (typeof i === 'number') return range (0, i-1);
+		if (typeof i === 'object') return Object.create (i);
+		return Array (...i);
+	}
   function range(a,b){
     if (~[typeof a, typeof b].indexOf('string')){
       if (typeof a === 'string') a = a.charCodeAt();
@@ -328,6 +333,7 @@ function main (_stack){
     "index" : "var item = $; stack.push ($.indexOf(item))",
     "code" : "charCode($)",
     "interp" : "var list = $; list.push($)",
+		"map" : "for (var i = 0, iter = iterate ($); i < iter.length; i++){\nstack.push (iter[i])"
   };
   const stdio = {
     "print" : "stdout(#)",
@@ -435,7 +441,7 @@ function compile_par (raw) {
     "!" : "boolnot",
     "H" : "inc",
     "T" : "dec",
-    "#?" : "randint",
+    "~" : "randint",
     "#%" : "random",
     "P" : "cart",
     "_" : "range",
