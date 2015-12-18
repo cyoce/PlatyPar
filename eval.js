@@ -33,7 +33,7 @@ function codelink_get (){
 }
 function markdown_gen (){
 	mainbox.innerText = `
-# [PlatyPar](https://github.com/cyoce/PlatyPar/blob/master/), ${rawbox.value.length} bytes
+# [PlatyPar](https://github.com/cyoce/PlatyPar), ${rawbox.value.length} bytes
 
     ${rawbox.value}
 
