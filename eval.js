@@ -503,7 +503,9 @@ function compile_par (raw) {
     "$" : "global",
     ";" : "end",
     "x" : "remove",
-    "X" : "expand"
+    "X" : "expand",
+		"L" : "lower",
+		"U" : "upper"
   };
   var out = '', tokens = parse_tokens(raw);
   for (var i = 0; i < tokens.length; i++){
