@@ -104,7 +104,8 @@ function parseNum (string, base, digits){
 }
 
 function genNum(n,radix) {
-	if (radix <= 36) return n.toString(radix);
+	var digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	if (radix <= 36 && radix >= 2) return n.toString(radix);
   if (radix === (void 0)) radix = 60;
   var pow = 0;
   while (n%1){
@@ -277,6 +278,24 @@ function main (_stack){
     }
     return out.join('\\n');
   }
+	function type (x){
+		return Object.prototype.toString.call (x).slice (8, -1)
+	}
+	function str (x){
+		if (type (x) === 'Array') return x.join ('');
+		return String (x);
+	}
+	function cart() {
+  return Array.prototype.reduce.call(arguments, function(a, b) {
+    var ret = [];
+    [...a].forEach(function(a) {
+      [...b].forEach(function(b) {
+        ret.push(a.concat([b]));
+      });
+    });
+    return ret;
+  }, [[]]);
+}
   ${stringify}
 	function iterate (i){
 		if (typeof i === 'number') return range (0, i-1);
@@ -339,7 +358,7 @@ function main (_stack){
     "upper" : "$.toUpperCase()",
     "randint" : "Math.floor(Math.random() * $)",
     "random" : "Math.random()",
-    "cart" : "cartesian($,$)",
+    "cart" : "cart($,$)",
     "rotate" : "rotate ($)",
     "sum" : "$.reduce ((x,y) => x + y)",
     "prod" : "$.reduce((x,y) => x * y)",
@@ -347,7 +366,7 @@ function main (_stack){
     "encap2" : "[$,$]",
     "flatten" : "flatten($)",
     "shallow" : "flatten_shallow($)",
-    "string" :  "String($)",
+    "string" :  "str ($)",
     "string_radix" : "$.toString($)",
     "number" : "Number($)",
     "number_radix" : "parseFloat($, $)",
@@ -358,7 +377,8 @@ function main (_stack){
 		"string" : "$.toString ()",
 		"string_radix" : "$.toString ($)",
 		"number" : "Number ($)",
-		"number_radix": "parseInt ($, $)"
+		"number_radix": "parseInt ($, $)",
+		"sort" : "[...$].sort ()"
   };
   const cmd = {
     "swap" : "var a = $, b = $; stack.push(b,a)",
@@ -537,7 +557,8 @@ function compile_par (raw) {
     "x" : "remove",
     "X" : "expand",
 		"L" : "lower",
-		"U" : "upper"
+		"U" : "upper",
+		"#_" : "sort"
   };
   var out = '', tokens = parse_tokens(raw);
   for (var i = 0; i < tokens.length; i++){
