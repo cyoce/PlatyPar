@@ -399,7 +399,8 @@ function main (_stack){
 		"string_radix" : "$.toString ($)",
 		"number" : "Number ($)",
 		"number_radix": "parseInt ($, $)",
-		"sort" : "[...$].sort ()"
+		"sort" : "[...$].sort ()",
+		"join" : "$.join ($)"
   };
   const cmd = {
     "swap" : "var a = $, b = $; stack.push(b,a)",
@@ -579,7 +580,8 @@ function compile_par (raw) {
     "X" : "expand",
 		"L" : "lower",
 		"U" : "upper",
-		"#_" : "sort"
+		"#_" : "sort",
+		"#+" : "join"
   };
   var out = '', tokens = parse_tokens(raw);
   for (var i = 0; i < tokens.length; i++){
