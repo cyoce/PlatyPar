@@ -198,6 +198,27 @@ function stdargs (){
 function type (x){
 	return Object.prototype.toString.call(x).slice(8,-1);
 }
+function add (a,b){
+	return a + b;
+}
+function minus (a,b){
+	return a - b;
+}
+function divideArray (list, n){
+  out = Array(n);
+  for (var i = 0; i < list.length;i++){
+    idx = Math.floor (i / (list.length/n));
+    if (! out [idx]) out [idx] = [];
+    out [idx].push (list [i])
+  }
+  return out;
+}
+function div (a,b) {
+	if (type (a) === 'Array' || type (a) === 'String'){
+		return divideArray (a,b);
+	}
+	return a / b;
+}
 function mul (a,b){
 	switch ([type (a), type (b)].join (', ')){
 		case "Number, Number":
@@ -324,9 +345,9 @@ function main (_stack){
   window.tokens = tokens;
   window.raw = raw;
   const ops = {
-    "add" : "$ + $",
-    "sub" : "$ - $",
-    "div" : "$ / $",
+    "add" : "add ($, $)",
+    "sub" : "minus ($, $)",
+    "div" : "div ($,$)",
     "mul" : "mul ($,$)",
     "exp" : "Math.pow($,$)",
     "mod" : "mod($,$)",
