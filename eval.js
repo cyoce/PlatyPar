@@ -1,25 +1,21 @@
 "use strict";
-var debug = true;
-setTimeout(rawupdate);
-const raw_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-const mod = ((x,y) => ((x % y) + y) % y);
-const mainbox = document.getElementById('main');
-mainbox.focus();
-const linkbox = document.getElementById('linkbox');
-const rawbox = document.getElementById('raw');
-var query = parse_query(location.href);
-if (query) {
-  if (query.code){
-    rawbox.value = query.code;
-  }
+document.onload = function(){
+	setTimeout(rawupdate);
+	const raw_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	const mod = ((x,y) => ((x % y) + y) % y);
+	const mainbox = document.getElementById('main');
+	mainbox.focus();
+	const linkbox = document.getElementById('linkbox');
+	const rawbox = document.getElementById('raw');
+	var query = parse_query(location.href);
+	if (query && query.code) rawbox.value = query.code;
+	var time = Math.floor(new Date / 1e3);
+	if (query === null) query = {};
+	if (query.date === (void 0) || time - parseNum(query.date, 62) > 20){
+	  query.date = genNum(time, 62);
+	  location.href = applyquery (query);
+	}
 }
-var time = Math.floor(new Date / 1e3);
-if (query === null) query = {};
-if (query.date === (void 0) || time - parseNum(query.date, 62) > 20){
-  query.date = genNum(time, 62);
-  location.href = applyquery (query);
-}
-console.log(+(new Date));
 function applyquery (query, href){
   href = href || location.href;
   href = href.split("?")[0];
@@ -27,9 +23,9 @@ function applyquery (query, href){
 }
 function codelink_get (){
   var code = rawbox.value;
-  linkbox.value = 'https://rawgit.com/cyoce/PlatyPar/master/page.html' + gen_query ({code:code});
+	var href ='https://rawgit.com/cyoce/PlatyPar/master/page.html' + gen_query ({code:rawbox.value});
   linkbox.focus();
-	return linkbox.value;
+	return linkbox.value = href;
 }
 function markdown_gen (){
 	mainbox.innerText = `
@@ -103,28 +99,27 @@ function parseNum (string, base, digits){
   return n * sign;
 }
 
-function genNum(n,radix) {
-	var digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+function genNum(n,radix, digits) {
+	digits = digits || raw_digits;
 	if (radix <= 36 && radix >= 2) return n.toString(radix);
   if (radix === (void 0)) radix = 60;
   var pow = 0;
-  while (n%1){
+  while (n % 1){
     n *= radix;
     pow++;
   }
- var num="", q=Math.floor(Math.abs(n)), r;
+ var num = "", q = Math.floor(Math.abs(n)), r;
  do {
-  r=q%radix;
-  num = raw_digits.charAt(r)
-       + num;
-  q=(q-r)/radix;
-} while(q);
+  r = q % radix;
+  num = raw_digits.charAt(r) + num;
+  q = (q - r) / radix;
+} while (q);
  if (pow){
    num = num.split('');
    num.splice(-pow,0,'.');
    num = num.join('');
  }
- return ((n<0) ? "-"+num : num);
+ return (n < 0 ? '-' : '') + num;
 }
 
 function logn (base, number){
@@ -227,7 +222,7 @@ function mul (a,b){
 		case "Array, Number":
 			return repeat (a, b);
 		case "Array, Array":
-			return cartesian (a , b);
+			return cart (a , b);
 		default:
 			return a * b;
 	}
@@ -306,11 +301,16 @@ function main (_stack){
 		if (type (x) === 'Array') return x.join ('');
 		return String (x);
 	}
+	Array.prototype.toString = function (){
+		return this.join (' ');
+	};
 	function cart() {
   return Array.prototype.reduce.call(arguments, function(a, b) {
+		a = [...a];
+		b = [...b];
     var ret = [];
-    [...a].forEach(function(a) {
-      [...b].forEach(function(b) {
+    a.forEach(function(a) {
+      b.forEach(function(b) {
         ret.push(a.concat([b]));
       });
     });
@@ -438,7 +438,7 @@ function main (_stack){
       outdent ();
       string = string.slice(1);
     }
-    out += `${'  '.repeat(indent_level) + string}\n`;
+    out += `${'  '.repeat(Math.max(indent_level, 0)) + string}\n`;
     if (string.last === '}') {
       outdent ();
       string = string.slice(0, string.length - 1);
