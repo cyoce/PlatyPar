@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Platypar by cyoce</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Platypar</h1>
+      <h2 class="project-tagline">A Stack-based golfing language designed after the platypus - weird but unforgettable</h2>
+      <a href="https://github.com/cyoce/PlatyPar" class="btn">View on GitHub</a>
+      <a href="https://github.com/cyoce/PlatyPar/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/cyoce/PlatyPar/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="platypar" class="anchor" href="#platypar" aria-hidden="true"><span class="octicon octicon-link"></span></a>PlatyPar</h1>
+
+<p>PlatyPar is a golfing language that compiles to JavaScript, similarly to CoffeeScript. It was made for code-golfing, mainly on <a href="http://codegolf.stackexchange.com">SE</a>. Unlike most conventional languages, it is stack-oriented, which leads to interesting benefits and side-effects. </p>
+
+<h2>
+<a id="postfix-notation" class="anchor" href="#postfix-notation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Postfix notation</h2>
+
+<p>One important distinction is that while any practical language uses <strong>infix notation</strong>, PlatyPar uses <strong>postfix notation</strong>.
+This means that for a given operation, let's say <code>+</code>, you would put it <strong>in</strong>between (as in <strong>in</strong>fix), i.e. <code>a+b</code>. This can be read as "a plus b".
+However, PlatyPar uses postfix notation, i.e. <code>ab+</code>. This can be read as "a, b, add", or if you prefer a pseudo-code approach, <code>[a,b].add</code>.
+There is an important tradeoff here. Consider the following infix expression:
+<code>a+b*c</code>
+If you are familiar with PEMDAS, you will know that that <em>should</em> evaluate to <code>a+(b*c)</code>. </p>
+
+<p>But what if you want to express <code>(a+b)*c</code>? You can't do it without parentheses. In postfix notation, both could be expressed <em>without parens</em>.
+The postfix equivalents of those two would be <code>abc*+</code> and <code>ab+c*</code>. This is a huge advantage, as it not only saves you space by not needing to use <code>()</code>, but it also makes this harder to read, making distinguishing noobs from pros such as yourself a trivial task.
+There is, however, a drawback: with postfix notation, every operator has an <strong>arity</strong>, or amount of operands it can take. While infix notation can have different arities, for example <code>-a</code> means the negation of <code>a</code> and <code>a-b</code> means the difference of <code>a</code> and <code>b</code>, postfix has a fixed arity, so <code>-</code> can <strong>only</strong> mean <code>a-b</code>. </p>
+
+<h2>
+<a id="stack-oriented" class="anchor" href="#stack-oriented" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stack-oriented</h2>
+
+<p>Under the hood, PlatyPar is stack-oriented: all operations apply transformations to the stack. This is the only form of memory. It can be thought of this way: the only variable you can manipulate is an array.
+PlatyPar translates each character into a command. For example, in our previous example <code>(2+3)*4</code>, we write this:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c1">23</span><span class="pl-k">+</span><span class="pl-c1">4</span><span class="pl-k">*</span></pre></div>
+
+<p>Since every character is treated separately, <strong>including numbers</strong> (more on that later), this is parsed as:</p>
+
+<div class="highlight highlight-source-js"><pre>push <span class="pl-c1">2</span>
+push <span class="pl-c1">3</span>
+add
+push <span class="pl-c1">4</span>
+multiply</pre></div>
+
+<p>This may be confusing, so I'll demonstrate what's going on behind the scenes:</p>
+
+<div class="highlight highlight-source-js"><pre>   <span class="pl-k">::</span> []
+<span class="pl-c1">2</span>  <span class="pl-k">::</span> [<span class="pl-c1">2</span>]
+<span class="pl-c1">3</span>  <span class="pl-k">::</span> [<span class="pl-c1">2</span> <span class="pl-c1">3</span>]
+<span class="pl-k">+</span>  <span class="pl-k">::</span> [<span class="pl-c1">2</span><span class="pl-k">+</span><span class="pl-c1">3</span>] <span class="pl-k">=&gt;</span> [<span class="pl-c1">5</span>]
+<span class="pl-c1">4</span>  <span class="pl-k">::</span> [<span class="pl-c1">5</span> <span class="pl-c1">4</span>]
+<span class="pl-k">*</span>  <span class="pl-k">::</span> [<span class="pl-c1">5</span><span class="pl-k">*</span><span class="pl-c1">4</span>] <span class="pl-k">=&gt;</span> [<span class="pl-c1">20</span>]</pre></div>
+
+<h2>
+<a id="implicit-io" class="anchor" href="#implicit-io" aria-hidden="true"><span class="octicon octicon-link"></span></a>Implicit I/O</h2>
+
+<p>Here's the interesting part: at the beginning of the program, PlatyPar always asks for input! All input (<code>,</code> separated) is pushed to the stack! So to find the the sum of two input numbers:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">+</span></pre></div>
+
+<p>That's it! Let's have a look at what it does if you input <code>2, 5</code>.</p>
+
+<div class="highlight highlight-source-js"><pre>   <span class="pl-k">::</span> []
+in <span class="pl-k">::</span> [<span class="pl-c1">2</span> <span class="pl-c1">5</span>]
+<span class="pl-k">+</span>  <span class="pl-k">::</span> [<span class="pl-c1">2</span><span class="pl-k">+</span><span class="pl-c1">5</span>] <span class="pl-k">=&gt;</span> <span class="pl-c1">7</span></pre></div>
+
+<p>Which brings us to the next feature: implicit printing.
+At the end of the program, the last item of the stack is printed. This is useful, because 99% of all code golf challenges require I/O! Even the most basic <code>Hello, world!</code> program requires output. When given a challenge, you only need to worry about implementing the algorithm, <em>not</em> getting input and giving output. If it's <em>implicit</em> you want to do something, why should you <em>explicitly</em> tell the program to do it? (this is why Java sucks)</p>
+
+<h2>
+<a id="number-literals-and-base-60" class="anchor" href="#number-literals-and-base-60" aria-hidden="true"><span class="octicon octicon-link"></span></a>Number Literals and Base 60</h2>
+
+<p>As previously mentioned, all characters are parsed as separate commands. This includes numbers. So <code>12</code> is not parsed as, well, <code>12</code>, but rather as <code>1, 2</code>. This makes repeated operations on integers easier. However, most numbers require multiple digits. Introducing the <code>#</code> operator. This parses all alphanumeric characters after it as a number. Using any operator or symbol in a number literal will terminate it, and then use that symbol for its normal function. A semicolon <code>;</code> or <code>EOL</code> can be used to terminate a number literal without any side effects. 
+To make up for the extra character required with the <code>#</code>, PlatyPar's number system is base 60. Why base 60? For starters, all alphanumeric characters, or <code>[0-9A-Za-z]</code> if you speak regex, allow a maximum of base 62. But having a higher base doesn't necessarily mean shorter length. 60 was chosen because it is the largest <a href="https://en.wikipedia.org/wiki/Highly_composite_number">highly composite number</a> that can be represented with the range of ASCII characters. TL;DR: a highly composite number is a number that has more factors than any number before it. This means it has a lot of divisors, so dividing by 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, or 60 <strong>will not</strong> result in a recurring decimal, whereas base 10 can't even handle a 3 without repeating. This makes base 60 number literals shorter. The order goes <code>0-9</code>, then <code>A-Z</code>, and finally <code>a-x</code>. A <code>y</code> in a number literal represents the <code>e</code> in scientific notation, and a <code>z</code> is a decimal point (as using an actual <code>.</code> would terminate the literal). If you're feeling lazy and don't want to figure out how to represent your number, open your console on the <a href="https://rawgit.com/cyoce/PlatyPar/master/page.html">main page</a>, and type <code>genNum (n)</code>. This will return the base 60 representation of <code>n</code>.</p>
+
+<h2>
+<a id="string-literals" class="anchor" href="#string-literals" aria-hidden="true"><span class="octicon octicon-link"></span></a>String Literals</h2>
+
+<p>As in most languages, a string can be delimited with either <code>'</code> or <code>"</code>. However, in PlatyPar they have different meaning: <code>'</code> is a character, whereas <code>"</code> is a string of characters. As such, no closing <code>'</code> is needed, because a single-quoted string can only contain one character. You will notice this in debug mode, where an array of characters will be represented as <code>'H 'e 'l 'l 'o ', ' 'w 'o 'r 'l 'd '!</code>
+Double-quoted strings behave as they do in most languages, except an unclosed string will be automatically closed on <code>EOL</code>.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/cyoce/PlatyPar">Platypar</a> is maintained by <a href="https://github.com/cyoce">cyoce</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
