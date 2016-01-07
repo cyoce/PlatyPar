@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script type='text/javascript' src='eval.js' defer></script>
+<script type'text/javascript' src='https://code.jquery.com/jquery-2.1.4.min.js'></script>
+<script type='text/javascript' src='eval.js' defer=""></script>
 <link rel='stylesheet' href='style.css'>
 <meta charset="utf-8">
   <title>PlatyPar Compiler</title>
@@ -9,11 +10,11 @@
 <body>
   <h1>PlatyPar — A stack-based golfing language transpiled into JavaScript</h1>
   <br>
-  <button class='box' id=compile onclick='compile_program()' focus>Compile</button> <button class='box' id=edit onclick='edit_program()'>Edit</button>
-  <input class='box box-input' id=raw onchange='rawupdate()' placeholder='program here'/>
+  <button class='box' id=compile focus>Compile</button>
+  <input class='box box-input' id=raw placeholder='program here'/>
   <br>
-  <button class='box' id=getlink onclick='codelink_get()'>Link</button>
-	<button class='box' id=markgen onclick='markdown_gen()'>Markdown</button>
+  <button class='box' id=getlink>Link</button>
+	<button class='box' id=markgen>Markdown</button>
   <input class='box box-input' id=linkbox placeholder='permalink here...'/>
   <pre class='box box-input' id='main' contenteditable> </pre>
 </body>
