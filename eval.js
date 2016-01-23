@@ -37,7 +37,7 @@ function main() {
 		});
 		linkbox.value = 'https://rawgit.com/cyoce/PlatyPar/master/page.html' + q;
 		linkbox.focus();
-		return q;
+		return linkbox.value;
 	}
 
 	$("#markgen").click(markdown_gen);
