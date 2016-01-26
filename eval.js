@@ -405,8 +405,6 @@ function main (_stack){
 			"random": "Math.random()",
 			"cart": "cart($,$)",
 			"rotate": "rotate ($)",
-			"sum": "$.reduce ((x,y) => x + y)",
-			"prod": "$.reduce((x,y) => x * y)",
 			"encap": "[$]",
 			"encap2": "[$,$]",
 			"flatten": "flatten($)",
@@ -447,7 +445,9 @@ function main (_stack){
 			"shift": "stack.shift()",
 			"index": "var item = $; stack.push ($.indexOf(item))",
 			"interp": "var list = $; list.push($)",
-			"map": "for (var i = 0, iter = iterate ($); i < iter.length; i++){\nstack.push (iter[i])"
+			"map": "for (var i = 0, iter = iterate ($); i < iter.length; i++){\nstack.push (iter[i])",
+			"prod": "var l = $; stack.push (l.length ? l.reduce((x,y) => x*y : 1);",
+			"sum": "var l = $; stack.push (l.length ? l.reduce((x,y) => x+y : 0);"
 		};
 		const stdio = {
 			"print": "stdout(#)",
